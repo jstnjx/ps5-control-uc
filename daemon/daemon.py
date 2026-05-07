@@ -468,7 +468,8 @@ async def amain() -> None:
         SESSION_IDLE_TIMEOUT_S, BUTTON_TAP_DELAY,
     )
 
-    user, profiles = build_profiles_from_creds(CREDS_PATH)
+    profiles = Profiles.load()
+    user = next(iter(profiles))
     log.info("User profile: %s   accountId=%s", user, profiles[user].get("id"))
 
     controller = PS5Controller(PS5_HOST, user, profiles)

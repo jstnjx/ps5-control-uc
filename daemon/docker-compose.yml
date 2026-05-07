@@ -4,11 +4,12 @@ services:
     container_name: ps5-control
     restart: unless-stopped
     network_mode: host
+
     environment:
       PS5_HOST:    "${PS5_HOST}"
-      PS5_CREDS:   "/data/credentials.json"
       LISTEN_HOST: "0.0.0.0"
       LISTEN_PORT: "${LISTEN_PORT:-8456}"
       LOG_LEVEL:   "${LOG_LEVEL:-INFO}"
+
     volumes:
-      - ./credentials.json:/data/credentials.json:ro
+      - ./.pyremoteplay:/root/.pyremoteplay:ro

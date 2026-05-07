@@ -48,13 +48,13 @@ else
 fi
 
 # --- 3. Remote Play pairing ---------------------------------------------------
-if [[ ! -f "credentials.json" ]]; then
+if [[ ! -f ".pyremoteplay/.profile.json" ]]; then
   echo
   say "Pairing with PS5 Remote Play..."
   echo "   This opens the pyremoteplay pairing flow inside a one-shot Docker"
   echo "   container. You'll need:"
   echo "     1. Your PSN Account ID (Base64 string, e.g. 'rWwY9ts16Qs=')"
-  echo "        - Public PSN profile: https://psn.flipscreen.games"
+  echo "        - Public PSN profile: https://www.psntools.com/psn-account-checker"
   echo "        - Private profile:    run ./get-account-id.sh first"
   echo "          (uses Sony OAuth, works regardless of privacy settings)"
   echo "     2. The 8-digit pairing PIN from your PS5"
@@ -62,13 +62,13 @@ if [[ ! -f "credentials.json" ]]; then
   echo
   read -r -p "Need to look up your Account ID via OAuth first? (y/N): " RUN_OAUTH
   if [[ "${RUN_OAUTH,,}" == "y" ]]; then
-    ( cd .. && bash get-account-id.sh ) || warn "OAuth lookup failed — try https://psn.flipscreen.games instead"
+    ( cd .. && bash get-account-id.sh ) || warn "OAuth lookup failed — try https://www.psntools.com/psn-account-checker instead"
     echo
   fi
   read -r -p "Press Enter when ready to pair (or Ctrl+C to cancel)..."
   bash ../pair.sh "$PS5_HOST"
-  if [[ ! -f "credentials.json" ]]; then
-    err "Pairing did not produce credentials.json — aborting."
+  if [[ ! -f ".pyremoteplay/.profile.json" ]]; then
+    err "Pairing did not produce .pyremoteplay/.profile.json — aborting."
     exit 1
   fi
   ok "Pairing complete."

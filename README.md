@@ -1,5 +1,10 @@
 # PS5 Control for Unfolded Circle Remote 3
 
+> Originally created by [sbr-labs/ps5-control-uc](https://github.com/sbr-labs/ps5-control-uc).  
+
+
+
+
 Control a PlayStation 5 from an Unfolded Circle Remote 3 — full d-pad, all
 face buttons, L1/R1/L2/R2/L3/R3, OPTIONS, SHARE, PS button, touchpad, plus
 wake-from-rest, send-to-rest, and best-effort app launching.
@@ -15,11 +20,15 @@ of two parts:
   always-on Linux box. It maintains a Remote Play session with the PS5
   and exposes a tiny HTTP API on port 8456. Built on
   [`pyremoteplay`](https://github.com/ktnrg45/pyremoteplay).
+
+  Remote Play registration and authentication are stored using
+  pyremoteplay's native profile format under `daemon/.pyremoteplay/`.
+
 - **`integration/`** — a custom integration for the Unfolded Circle
   Remote 3 firmware. Forwards every button press as an HTTP call to the
   daemon.
 
-```
+```text
 [ Remote 3 ] --HTTP--> [ Linux box w/ daemon ] --Remote Play--> [ PS5 ]
 ```
 
@@ -43,6 +52,10 @@ git clone <this-repo>
 cd <this-repo>
 ./install.sh
 ```
+
+> **Note:** Modern Debian/Ubuntu systems with PEP 668 protections are
+> supported automatically — the pairing flow runs entirely inside Docker
+> and does not require local Python package installation.
 
 `install.sh` will:
 1. Verify Docker is installed
@@ -137,7 +150,7 @@ Plus L1, R1, L2, R2, L3, R3, OPTIONS, SHARE, TOUCHPAD as
 Useful if you want to drive the PS5 from anywhere else (Home Assistant,
 custom scripts, Apple Shortcuts, etc.):
 
-```
+```text
 POST /button     {"button": "<name>", "action": "tap|press|release"}
 POST /wakeup
 POST /standby
@@ -162,22 +175,35 @@ the Remote 3.
 
 ## Troubleshooting
 
-**Pairing fails with "Could not reach PS5".** PS5 must be powered on (not
-in rest mode) for the initial pairing. After pairing succeeds, the daemon
-can wake it from rest.
+**Pairing fails with "Could not reach PS5".**
+PS5 must be powered on (not in rest mode) for the initial pairing.
+After pairing succeeds, the daemon can wake it from rest.
 
-**PIN keeps expiring.** Generate a fresh one on the PS5 immediately
-before running `install.sh` — PINs are valid ~5 minutes.
+**PIN keeps expiring.**
+Generate a fresh one on the PS5 immediately before running `install.sh`
+— PINs are valid ~5 minutes.
 
-**"Driver not connected" after upload.** Restart the Remote 3 once after
-the first upload (Settings → Power → Restart). UC's integration list
-caches aggressively.
+**Pairing succeeds but install.sh says no credentials were created.**
+Newer versions of `pyremoteplay` store registration data in
+`daemon/.pyremoteplay/.profile.json` instead of `credentials.json`.
+Version 0.5.0+ handles this automatically.
 
-**Buttons feel laggy.** Wi-Fi RTT to the daemon dominates. Wired
-Ethernet on the daemon box helps significantly.
+**Debian/Ubuntu says "externally-managed-environment".**
+This is PEP 668 protection against modifying system Python packages.
+The project's pairing flow runs fully inside Docker and no longer
+requires local `pip install`.
 
-**Daemon can't reach PS5 after a reboot.** Some routers re-issue DHCP
-addresses. Set a static IP / DHCP reservation for the PS5.
+**"Driver not connected" after upload.**
+Restart the Remote 3 once after the first upload
+(Settings → Power → Restart). UC's integration list caches aggressively.
+
+**Buttons feel laggy.**
+Wi-Fi RTT to the daemon dominates. Wired Ethernet on the daemon box
+helps significantly.
+
+**Daemon can't reach PS5 after a reboot.**
+Some routers re-issue DHCP addresses. Set a static IP / DHCP reservation
+for the PS5.
 
 ## Updating
 
@@ -197,12 +223,12 @@ cd ps5-control
    re-upload `integration/ps5-uc-integration.tar.gz` via the Remote 3 web
    configurator. If it didn't, you're done.
 
-Your `credentials.json` and `.env` are preserved (they're gitignored — never
-touched by updates).
+Your `.pyremoteplay/` profile directory and `.env` are preserved
+(they're gitignored — never touched by updates).
 
 > **Note:** `update.sh` only works if you originally `git clone`d the repo.
-> If you downloaded a zip, re-clone fresh, copy your `credentials.json` and
-> `.env` over from your old install, then run `./install.sh`.
+> If you downloaded a zip, re-clone fresh, copy your `.pyremoteplay/`
+> directory and `.env` over from your old install, then run `./install.sh`.
 
 ## Stopping / restarting the daemon
 
@@ -215,9 +241,9 @@ docker compose logs -f    # tail logs
 
 ## Privacy / what stays local
 
-- Your `daemon/credentials.json` (Remote Play registration) is generated
-  on first install and stays on your daemon host. **Never share it** —
-  it's tied to your PSN account.
+- Your `daemon/.pyremoteplay/.profile.json`
+  (Remote Play registration) is generated on first install and stays on
+  your daemon host. **Never share it** — it's tied to your PSN account.
 - Your PS5 IP is stored in `daemon/.env` (also local).
 - Both files are listed in `.gitignore` — they won't accidentally end up
   in commits if you fork this.
